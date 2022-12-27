@@ -7,6 +7,8 @@
 #include <cmath>
 #include <ctime>
 
+constexpr double epsilon = 0.00001;
+
 std::vector<double> slice(std::vector<double> const& v, int m, int n)
 {
 	auto first = v.begin() + m;
@@ -619,7 +621,6 @@ Matrix createRandomMatrix(int size) {
 }
 
 
-/////////////////////////////////////////////////
 void swapRows(Matrix& A, Matrix& I, int position)
 {
 	Row tempA = A[position];
@@ -655,54 +656,7 @@ void swapRows(Matrix& A, int position, double& determinant)
 	}
 }
 
-double determinant(Matrix& A)
-{
-	const int size = A.getSize();
 
-	Matrix tempA = A;
-	Row rowA;
-
-	double divider;
-	double multiplier;
-
-	double determinant = 1;
-
-	for (int i = 0; i < size; i++)
-	{
-		if (tempA[i].isNull())
-			return 0;
-
-		divider = tempA[i][i];
-		if (divider == 0)
-		{
-			swapRows(tempA, i, determinant);
-			if (tempA[i][i] == 0)
-			{
-				return 0;
-			}
-
-			i--;
-			continue;
-		}
-		tempA[i] = tempA[i] / divider;
-		determinant *= divider;
-
-		for (int j = i + 1; j < size; j++)
-		{
-			multiplier = tempA[j][i];
-
-			if (multiplier == 0)
-				continue;
-
-			rowA = tempA[i] * multiplier;
-			tempA[j] -= rowA;
-		}
-	}
-	return determinant;
-}
-
-
-/////////////////////////////////////////////////////////
 Matrix JordanGaus(Matrix& A)
 {
 	const int size = A.getSize();
@@ -764,5 +718,100 @@ Matrix JordanGaus(Matrix& A)
 
 	return I;
 }
-/////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
+Matrix Minor(Matrix A, int i, int j)
+{
+	const int matrixSize = A.getSize();
+	Matrix minor = Matrix(matrixSize - 1);
+
+	int iteratorI = 0;
+	int iteratorJ = 0;
+
+	for (int y = 0; y < matrixSize; y++)
+	{
+		if (y == i)
+			continue;
+
+		for (int x = 0; x < matrixSize; x++)
+		{
+			if (x == j)
+				continue;
+
+			minor[iteratorI][iteratorJ] = A[y][x];
+			iteratorJ++;
+		}
+
+		iteratorJ = 0;
+		iteratorI++;
+	}
+
+	return minor;
+}
+
+double determinant(Matrix A)
+{
+	const int size = A.getSize();
+
+	Matrix tempA = A;
+	Row rowA;
+
+	double divider;
+	double multiplier;
+
+	double determinant = 1;
+
+	for (int i = 0; i < size; i++)
+	{
+		if (tempA[i].isNull())
+			return 0;
+
+		divider = tempA[i][i];
+		if (divider == 0)
+		{
+			swapRows(tempA, i, determinant);
+			if (tempA[i][i] == 0)
+			{
+				return 0;
+			}
+
+			i--;
+			continue;
+		}
+		tempA[i] = tempA[i] / divider;
+		determinant *= divider;
+
+		for (int j = i + 1; j < size; j++)
+		{
+			multiplier = tempA[j][i];
+
+			if (multiplier == 0)
+				continue;
+
+			rowA = tempA[i] * multiplier;
+			tempA[j] -= rowA;
+		}
+	}
+	return determinant;
+}
+
+Matrix Foo(Matrix m)							// Rename function !!!
+{
+	const int matrixSize = m.getSize();
+
+	Matrix answer = Matrix(matrixSize);
+	double mainDeterminant = determinant(m);
+
+	for (int i = 0; i < matrixSize; i++)
+	{
+		for (int j = 0; j < matrixSize; j++)
+		{
+			if((j+i) % 2 == 0)
+				answer[j][i] = determinant(Minor(m, i, j)) / mainDeterminant;
+			else
+				answer[j][i] = -determinant(Minor(m, i, j)) / mainDeterminant;
+		}
+	}
+
+	return answer;
+}
